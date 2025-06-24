@@ -18,7 +18,7 @@ Bu repository, Binance Testnet üzerinde çalışan otomatik kripto para trading
 cd /home/dcoakelc/
 
 # Kurulum scriptini indir ve çalıştır
-wget https://raw.githubusercontent.com/mhmt23/freqtrade-bot1/main/clean_install.sh
+wget https://raw.githubusercontent.com/mhmt23/freqtrade-bot1/master/clean_install.sh
 chmod +x clean_install.sh
 ./clean_install.sh
 ```
