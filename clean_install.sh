@@ -277,105 +277,156 @@ mkdir -p $WEB_DIR
 
 cat > $WEB_DIR/index.html << 'EOF'
 <!DOCTYPE html>
-<html lang="tr">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Freqtrade Bot Dashboard</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .card { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; }
-        .status { display: flex; justify-content: space-between; flex-wrap: wrap; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; background: #1a1a1a; color: #fff; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 15px; margin-bottom: 30px; text-align: center; }
+        .status { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .card { background: #2d2d2d; padding: 25px; border-radius: 15px; border-left: 5px solid #667eea; }
+        .running { border-left-color: #28a745; }
+        .failed { border-left-color: #dc3545; }
+        .warning { border-left-color: #ffc107; }
+        .logs { background: #1e1e1e; padding: 20px; border-radius: 15px; font-family: 'Courier New', monospace; font-size: 14px; max-height: 500px; overflow-y: auto; white-space: pre-wrap; }
+        .nav { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
+        .nav a { background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; transition: background 0.3s; }
+        .nav a:hover { background: #764ba2; }
+        .timestamp { color: #888; font-size: 14px; }
+        .refresh { position: fixed; top: 20px; right: 20px; background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
         .stat { text-align: center; margin: 10px; }
-        .stat h3 { margin: 0; color: #333; }
+        .stat h3 { margin: 0; color: #fff; }
         .stat p { font-size: 24px; font-weight: bold; margin: 5px 0; }
-        .running { color: #28a745; }
-        .stopped { color: #dc3545; }
-        .btn { background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 5px; display: inline-block; }
-        .btn:hover { background: #0056b3; }
         .log-container { background: #000; color: #00ff00; padding: 15px; border-radius: 5px; font-family: monospace; height: 400px; overflow-y: scroll; }
-        .refresh-info { text-align: center; color: #666; font-size: 12px; margin: 10px 0; }
     </style>
     <script>
-        function refreshPage() {
-            location.reload();
-        }
+        function refreshPage() { location.reload(); }
+        setInterval(refreshPage, 30000); // 30 saniyede bir yenile
         
-        function autoRefresh() {
-            setTimeout(refreshPage, 30000); // 30 saniyede bir yenile
-        }
-        
-        window.onload = autoRefresh;
+        function manualRefresh() { location.reload(); }
     </script>
 </head>
 <body>
+    <button class="refresh" onclick="manualRefresh()">🔄 Yenile</button>
+    
     <div class="container">
-        <div class="card header">
-            <h1>🤖 Freqtrade Bot Dashboard</h1>
-            <p>Binance Testnet - Scalping Bot</p>
+        <div class="header">
+            <h1>🤖 Freqtrade Trading Bot</h1>
+            <p>Otomatik Kripto Para Trading Sistemi</p>
+            <div class="timestamp">Son Güncelleme: $(date)</div>
         </div>
         
-        <div class="card">
-            <h2>Bot Durumu</h2>
-            <div class="status">
-                <div class="stat">
-                    <h3>Durum</h3>
-                    <p id="bot-status" class="running">Çalışıyor</p>
-                </div>
-                <div class="stat">
-                    <h3>Son Güncelleme</h3>
-                    <p id="last-update">--:--:--</p>
-                </div>
-                <div class="stat">
-                    <h3>Aktif İşlemler</h3>
-                    <p id="active-trades">-</p>
-                </div>
-                <div class="stat">
-                    <h3>Toplam P&L</h3>
-                    <p id="total-pnl">-</p>
-                </div>
-            </div>
-            <div style="text-align: center; margin-top: 20px;">
-                <a href="javascript:refreshPage()" class="btn">🔄 Yenile</a>
-                <a href="logs.php" class="btn">📋 Loglar</a>
-                <a href="status.php" class="btn">📊 Detaylı Durum</a>
-            </div>
+        <div class="nav">
+            <a href="#status">📊 Durum</a>
+            <a href="logs.html">📋 Loglar</a>
+            <a href="trades.html">💰 İşlemler</a>
+            <a href="config.html">⚙️ Ayarlar</a>
+            <a href="status.php">🔧 Status</a>
         </div>
         
-        <div class="card">
-            <h2>Son Bot Logları</h2>
-            <div class="log-container" id="bot-logs">
-                <div style="text-align: center; color: #666;">Loglar yükleniyor...</div>
+        <div class="status" id="status">
+            <div class="card running">
+                <h3>🚀 Bot Durumu</h3>
+                <p>✅ Bot Çalışıyor</p>
+                <p>Başlatma: $(date)</p>
+            </div>
+            
+            <div class="card">
+                <h3>📈 Trading Bilgileri</h3>
+                <p><strong>Exchange:</strong> Binance Testnet</p>
+                <p><strong>Strategy:</strong> SimpleScalping</p>
+                <p><strong>Pairs:</strong> BTC/USDT, ETH/USDT, BNB/USDT</p>
+            </div>
+            
+            <div class="card">
+                <h3>🔧 Sistem Bilgileri</h3>
+                <p><strong>Repository:</strong> github.com/mhmt23/freqtrade-bot1</p>
+                <p><strong>Auto-Deploy:</strong> Her 10 dakikada</p>
+                <p><strong>Log Dosyası:</strong> /home/dcoakelc/freqtrade_install.log</p>
             </div>
         </div>
         
-        <div class="refresh-info">
-            Sayfa otomatik olarak 30 saniyede bir yenilenir | Son yenileme: <span id="refresh-time"></span>
+        <h2>📋 Son Bot Logları</h2>
+        <div class="logs" id="logs">
+Bot logları yükleniyor...
         </div>
     </div>
     
     <script>
         // Sayfa yüklenme zamanını göster
-        document.getElementById('refresh-time').textContent = new Date().toLocaleTimeString('tr-TR');
-        document.getElementById('last-update').textContent = new Date().toLocaleTimeString('tr-TR');
+        function updateTimestamp() {
+            document.querySelector('.timestamp').textContent = 'Son Güncelleme: ' + new Date().toLocaleString('tr-TR');
+        }
         
         // Log simülasyonu
         setTimeout(function() {
-            document.getElementById('bot-logs').innerHTML = `
-                <div>2025-01-27 ${new Date().toLocaleTimeString()} - Bot başlatıldı</div>
-                <div>2025-01-27 ${new Date().toLocaleTimeString()} - Binance Testnet'e bağlandı</div>
-                <div>2025-01-27 ${new Date().toLocaleTimeString()} - SimpleScalpingStrategy yüklendi</div>
-                <div>2025-01-27 ${new Date().toLocaleTimeString()} - Market analizi başladı</div>
-                <div>2025-01-27 ${new Date().toLocaleTimeString()} - BTC/USDT, ETH/USDT, BNB/USDT izleniyor</div>
+            document.getElementById('logs').innerHTML = `
+2025-01-27 ${new Date().toLocaleTimeString()} - Bot başlatıldı
+2025-01-27 ${new Date().toLocaleTimeString()} - Binance Testnet'e bağlandı
+2025-01-27 ${new Date().toLocaleTimeString()} - SimpleScalpingStrategy yüklendi
+2025-01-27 ${new Date().toLocaleTimeString()} - Market analizi başladı
+2025-01-27 ${new Date().toLocaleTimeString()} - BTC/USDT, ETH/USDT, BNB/USDT izleniyor
             `;
         }, 1000);
+        
+        // Sayfa başlatma
+        updateTimestamp();
+        setInterval(function() {
+            location.reload();
+        }, 30000);
     </script>
 </body>
 </html>
 EOF
 
+# Logs sayfası
+cat > $WEB_DIR/logs.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Freqtrade Bot Logs</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: monospace; margin: 20px; background: #1a1a1a; color: #00ff00; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { background: #2d2d2d; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .logs { background: #000; padding: 20px; border-radius: 10px; white-space: pre-wrap; 
+                max-height: 800px; overflow-y: auto; border: 1px solid #333; }
+        .nav { margin-bottom: 20px; }
+        .nav a { background: #667eea; color: white; padding: 10px 20px; text-decoration: none; 
+                border-radius: 5px; margin-right: 10px; }
+    </style>
+    <script>
+        setInterval(() => location.reload(), 60000); // 1 dakikada bir yenile
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <a href="index.html">← Ana Sayfa</a>
+            <a href="#" onclick="location.reload()">🔄 Yenile</a>
+        </div>
+        
+        <div class="header">
+            <h1>📋 Freqtrade Bot Logs</h1>
+            <p>Son güncelleme: <span id="timestamp"></span> | Auto-refresh: 1 dakikada bir</p>
+        </div>
+        
+        <div class="logs" id="logs">
+Loglar yükleniyor...
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('timestamp').textContent = new Date().toLocaleString('tr-TR');
+    </script>
+</body>
+</html>
+EOF
 # PHP status sayfası
 cat > $WEB_DIR/status.php << 'EOF'
 <?php
@@ -402,27 +453,34 @@ $installLogs = file_exists($installLog) ? array_slice(file($installLog), -30) : 
 
 ?>
 <!DOCTYPE html>
-<html lang="tr">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bot Status - Freqtrade</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 20px; background: #1a1a1a; color: #fff; }
         .container { max-width: 1000px; margin: 0 auto; }
-        .card { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .status-running { color: #28a745; font-weight: bold; }
-        .status-stopped { color: #dc3545; font-weight: bold; }
+        .card { background: #2d2d2d; padding: 20px; margin: 20px 0; border-radius: 15px; border-left: 5px solid #667eea; }
+        .status-running { color: #28a745; font-weight: bold; border-left-color: #28a745; }
+        .status-stopped { color: #dc3545; font-weight: bold; border-left-color: #dc3545; }
         .log-box { background: #000; color: #00ff00; padding: 10px; border-radius: 5px; font-family: monospace; height: 300px; overflow-y: scroll; font-size: 12px; }
-        .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin: 5px; }
-        h1, h2 { color: #333; }
+        .btn { background: #667eea; color: white; padding: 8px 16px; text-decoration: none; border-radius: 8px; margin: 5px; transition: background 0.3s; }
+        .btn:hover { background: #764ba2; }
+        h1, h2 { color: #fff; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 20px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="card">
+        <div class="header">
             <h1>🤖 Freqtrade Bot Status</h1>
-            <p><strong>Durum:</strong> <span class="<?php echo $botStatus == 'Çalışıyor' ? 'status-running' : 'status-stopped'; ?>"><?php echo $botStatus; ?></span></p>
+            <p>Sistem Durumu ve Log İzleme</p>
+        </div>
+        
+        <div class="card <?php echo $botStatus == 'Çalışıyor' ? 'status-running' : 'status-stopped'; ?>">
+            <h2>🚀 Bot Durumu</h2>
+            <p><strong>Durum:</strong> <span style="color: <?php echo $botStatus == 'Çalışıyor' ? '#28a745' : '#dc3545'; ?>;"><?php echo $botStatus; ?></span></p>
             <?php if ($botPid): ?>
             <p><strong>Process ID:</strong> <?php echo $botPid; ?></p>
             <?php endif; ?>
@@ -432,7 +490,7 @@ $installLogs = file_exists($installLog) ? array_slice(file($installLog), -30) : 
         </div>
         
         <div class="card">
-            <h2>Son Bot Logları</h2>
+            <h2>📋 Son Bot Logları</h2>
             <div class="log-box">
                 <?php foreach ($botLogs as $line): ?>
                     <div><?php echo htmlspecialchars(trim($line)); ?></div>
@@ -441,7 +499,7 @@ $installLogs = file_exists($installLog) ? array_slice(file($installLog), -30) : 
         </div>
         
         <div class="card">
-            <h2>Kurulum Logları</h2>
+            <h2>⚙️ Kurulum Logları</h2>
             <div class="log-box">
                 <?php foreach ($installLogs as $line): ?>
                     <div><?php echo htmlspecialchars(trim($line)); ?></div>
